@@ -1,6 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const wasm = require("./WasmInstance")
+const wasm = require("./wasm_instance")
 const PROTO_PATH = './proto/vm_runtime.proto'
 
 // TODO add map to store wasm instance(instanceId: wasmInstance/bytes)
