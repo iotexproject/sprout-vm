@@ -1,6 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const wasm = require("./wasm_instance")
+const wasm = require("./WasmInstance")
 const PROTO_PATH = './proto/vm_runtime.proto'
 
 // TODO add map to store wasm instance(instanceId: wasmInstance/bytes)
@@ -16,13 +16,15 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const vmRuntime = grpc.loadPackageDefinition(packageDefinition).vm_runtime;
 
+const bytesMap = new Map();
+
 function create(call, callback) {
     const project = call.request.project;
     // const bytes = call.request.content;
     const path = require('path').join(__dirname, '../wasm/halo2_evm_verifier_bg.wasm');
     const bytes = require('fs').readFileSync(path);
-    wasm.setWasmBytes(bytes);
-    wasm.initWasmInstance();
+
+    bytesMap.set(project, bytes);
 
     callback(null, { instanceId: 'Hello ' + project });
 }
@@ -30,9 +32,9 @@ function create(call, callback) {
 function executeOperator(call, callback) {
     const project = call.request.project;
     const param = call.request.param;
+    
+    const bytes = bytesMap.get(project);
 
-    const path = require('path').join(__dirname, '../wasm/halo2_evm_verifier_bg.wasm');
-    const bytes = require('fs').readFileSync(path);
     wasm.setWasmBytes(bytes);
     wasm.initWasmInstance();
 
