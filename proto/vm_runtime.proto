@@ -8,7 +8,7 @@ service VmRuntime {
 
 message CreateRequest {
     string project = 1;
-    bytes content = 2;
+    string content = 2;
     string expParam = 3;
 }
 

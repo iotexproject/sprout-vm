@@ -1,10 +1,11 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const wasm = require("./wasm_instance")
-const PROTO_PATH = './proto/vm_runtime.proto'
+const zlib = require('zlib');
+const { v4: uuidv4 } = require('uuid');
 
-// TODO add map to store wasm instance(instanceId: wasmInstance/bytes)
-// need to update wasm_instance.js? add getWasmInstance 
+const wasm = require("./wasm_instance")
+
+const PROTO_PATH = './proto/vm_runtime.proto'
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -16,30 +17,29 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const vmRuntime = grpc.loadPackageDefinition(packageDefinition).vm_runtime;
 
-const bytesMap = new Map();
+const contentMap = new Map();
 
 function create(call, callback) {
     const project = call.request.project;
-    // const bytes = call.request.content;
-    const path = require('path').join(__dirname, '../wasm/halo2_evm_verifier_bg.wasm');
-    const bytes = require('fs').readFileSync(path);
+    const content = call.request.content;
 
-    bytesMap.set(project, bytes);
+    contentMap.set(project, content);
 
-    callback(null, { instanceId: 'Hello ' + project });
+    callback(null, { instanceId: uuidv4() });
 }
 
 function executeOperator(call, callback) {
     const project = call.request.project;
     const param = call.request.param;
     
-    const bytes = bytesMap.get(project);
+    const content = contentMap.get(project);
+    const buffer = Buffer.from(content, 'hex');
+    let bytes = zlib.inflateSync(buffer);
 
     wasm.setWasmBytes(bytes);
     wasm.initWasmInstance();
 
     const result = wasm.prove(param);
-    console.log(result);
     // convert result to bytes
     let resultBytes = new Uint8Array(result.length);
     for (var i = 0; i < result.length; i++) {
