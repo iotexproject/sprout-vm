@@ -1,7 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const zlib = require('zlib');
-const { v4: uuidv4 } = require('uuid');
 
 const wasm = require("./wasm_instance")
 
@@ -20,19 +19,19 @@ const vmRuntime = grpc.loadPackageDefinition(packageDefinition).vm_runtime;
 const contentMap = new Map();
 
 function create(call, callback) {
-    const project = call.request.project;
+    const projectID = call.request.projectID;
     const content = call.request.content;
 
-    contentMap.set(project, content);
+    contentMap.set(projectID, content);
 
-    callback(null, { instanceId: uuidv4() });
+    callback(null, {});
 }
 
 function executeOperator(call, callback) {
-    const project = call.request.project;
+    const projectID = call.request.projectID;
     const param = call.request.param;
     
-    const content = contentMap.get(project);
+    const content = contentMap.get(projectID);
     const buffer = Buffer.from(content, 'hex');
     let bytes = zlib.inflateSync(buffer);
 
