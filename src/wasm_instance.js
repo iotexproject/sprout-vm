@@ -4,7 +4,7 @@ let wasm;
 let wasmBytes;
 const { TextDecoder, TextEncoder } = require(`util`);
 
-const heap = new Array(128).fill(undefined);
+let heap = new Array(128).fill(undefined);
 
 heap.push(undefined, null, true, false);
 
@@ -300,8 +300,18 @@ module.exports.setWasmBytes = function(bytes) {
 };
 
 module.exports.initWasmInstance = function() {
+    reset();
     const wasmModule = new WebAssembly.Module(wasmBytes);
     const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
     wasm = wasmInstance.exports;
 };
 module.exports.__wasm = wasm;
+
+function reset () {
+    heap = new Array(128).fill(undefined);
+    heap.push(undefined, null, true, false);
+    heap_next = heap.length;
+    cachedUint8Memory0 = null;
+    WASM_VECTOR_LEN = 0;
+    cachedInt32Memory0 = null;
+};
