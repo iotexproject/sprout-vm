@@ -22,6 +22,8 @@ function create(call, callback) {
     const projectID = call.request.projectID;
     const content = call.request.content;
 
+    console.log('create vm with projectID %d', projectID)
+
     contentMap.set(projectID, content);
 
     callback(null, {});
@@ -30,8 +32,16 @@ function create(call, callback) {
 function executeOperator(call, callback) {
     const projectID = call.request.projectID;
     const param = call.request.param;
-    
+
+    console.log('executor vm with projectID %d', projectID)
+
+    if (!contentMap.has(projectID)) {
+        console.log("projectID '%d' does not exist in the map.", projectID);
+        return callback(new Error(`projectID '${projectID}' does not exist in the halo2 vm.`));
+    }
+
     const content = contentMap.get(projectID);
+
     const buffer = Buffer.from(content, 'hex');
     let bytes = zlib.inflateSync(buffer);
 
